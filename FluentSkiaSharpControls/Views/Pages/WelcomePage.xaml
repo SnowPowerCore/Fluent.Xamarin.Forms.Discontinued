@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page:BasePageView xmlns="http://xamarin.com/schemas/2014/forms"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                   xmlns:page="clr-namespace:FluentSkiaSharpControls.Views.Pages"
+                   xmlns:vms="clr-namespace:FluentSkiaSharpControls.ViewModels"
+                   xmlns:controls="clr-namespace:FluentSkiaSharpControls.Controls.Skia.Fluent" xmlns:xameffects="clr-namespace:XamEffects;assembly=XamEffects"
+                   x:Class="FluentSkiaSharpControls.Views.Pages.WelcomePage"
+                   ViewModelType="{x:Type vms:WelcomeViewModel}"
+                   BackgroundColor="Black">
+    <controls:ToggleSwitch HorizontalOptions="Start" VerticalOptions="Start"/>
+</page:BasePageView>
