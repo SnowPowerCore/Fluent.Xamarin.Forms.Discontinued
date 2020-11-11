@@ -8,7 +8,8 @@
                    ViewModelType="{x:Type vms:WelcomeViewModel}"
                    BackgroundColor="Black">
     <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
-        <controls:ToggleSwitch IsOn="{Binding MagicProperty}" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
+        <controls:ToggleSwitch IsOn="{Binding MagicProperty}"
+            VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
         <Button Command="{Binding UpdateStateCommand}" Text="Toggle property"/>
     </StackLayout>
 </page:BasePageView>
