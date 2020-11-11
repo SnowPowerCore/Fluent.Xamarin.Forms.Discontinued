@@ -7,5 +7,8 @@
                    x:Class="FluentSkiaSharpControls.Views.Pages.WelcomePage"
                    ViewModelType="{x:Type vms:WelcomeViewModel}"
                    BackgroundColor="Black">
-    <controls:ToggleSwitch HorizontalOptions="Start" VerticalOptions="Start"/>
+    <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
+        <controls:ToggleSwitch IsOn="{Binding MagicProperty}" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
+        <Button Command="{Binding UpdateStateCommand}" Text="Toggle property"/>
+    </StackLayout>
 </page:BasePageView>
