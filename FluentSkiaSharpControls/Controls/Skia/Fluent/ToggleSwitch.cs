@@ -139,7 +139,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                             ? new SKPaint
                             {
                                 Style = SKPaintStyle.StrokeAndFill,
-                                Color = ToggleBackgroundColor.ChangeColorBrightness(-0.25f).ToSKColor(),
+                                Color = ToggleBackgroundColor.Darken(0.25f).ToSKColor(),
                                 StrokeWidth = 3,
                                 FilterQuality = SKFilterQuality.High,
                                 IsAntialias = true
@@ -166,7 +166,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                             ? new SKPaint
                         {
                             Style = SKPaintStyle.StrokeAndFill,
-                            Color = ToggleBackgroundColor.ChangeColorBrightness(-0.5f).ToSKColor(),
+                            Color = ToggleBackgroundColor.Darken(0.5f).ToSKColor(),
                             StrokeWidth = 3,
                             FilterQuality = SKFilterQuality.High,
                             IsAntialias = true
@@ -202,7 +202,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                 var canvas = e.Surface.Canvas;
                 canvas.Clear();
 
-                int width = e.Info.Width;
+                var width = e.Info.Width;
                 var originalHeight = e.Info.Height;
                 var actualHeight = width / 2f;
 

@@ -10,6 +10,7 @@
     <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
         <controls:ToggleSwitch IsOn="{Binding MagicProperty}"
             VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
+        <controls:Button HeightRequest="40" WidthRequest="180"/>
         <Button Command="{Binding UpdateStateCommand}" Text="Toggle property"/>
     </StackLayout>
 </page:BasePageView>
