@@ -4,7 +4,7 @@ using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace FluentSkiaSharpControls.Controls.Skia.Fluent
@@ -17,12 +17,73 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
         private TouchEffect _touchEffect;
         private readonly ButtonControl _button;
 
+        public static readonly BindableProperty TextProperty =
+            BindableProperty.Create(nameof(Text), typeof(string),
+                typeof(Button), defaultValue: string.Empty,
+                defaultBindingMode: BindingMode.OneWay,
+                propertyChanged: OnTextChanged);
+
+        public static readonly BindableProperty ButtonBackgroundColorProperty =
+            BindableProperty.Create(nameof(ButtonBackgroundColor), typeof(Color),
+                typeof(Button), defaultValue: Color.FromHex("#333333"),
+                defaultBindingMode: BindingMode.OneWay,
+                propertyChanged: OnButtonBackgroundChanged);
+
+        public static readonly BindableProperty ButtonForegroundColorProperty =
+            BindableProperty.Create(nameof(ButtonForegroundColor), typeof(Color),
+                typeof(Button), defaultValue: Color.White,
+                defaultBindingMode: BindingMode.OneWay,
+                propertyChanged: OnButtonForegroundChanged);
+
+        public static readonly BindableProperty CommandProperty =
+            BindableProperty.Create(nameof(Command), typeof(ICommand),
+                typeof(Button), defaultValue: null,
+                defaultBindingMode: BindingMode.OneWay);
+
+        public static readonly BindableProperty CommandParameterProperty =
+            BindableProperty.Create(nameof(CommandParameter), typeof(object),
+                typeof(Button), defaultValue: null,
+                defaultBindingMode: BindingMode.OneWay);
+
+        public string Text
+        {
+            get => (string)GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
+        }
+
+        public Color ButtonBackgroundColor
+        {
+            get => (Color)GetValue(ButtonBackgroundColorProperty);
+            set => SetValue(ButtonBackgroundColorProperty, value);
+        }
+
+        public Color ButtonForegroundColor
+        {
+            get => (Color)GetValue(ButtonForegroundColorProperty);
+            set => SetValue(ButtonForegroundColorProperty, value);
+        }
+
+        public ICommand Command
+        {
+            get => (ICommand)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
+        }
+
+        public object CommandParameter
+        {
+            get => GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
+        }
+
         public Button()
         {
             _touchEffect = new TouchEffect { Capture = true };
             _touchEffect.TouchAction += HandleTouch;
             Effects.Add(_touchEffect);
-            Content = _button = new ButtonControl();
+            Content = _button = new ButtonControl
+            {
+                CommandFunc = () => Command?.Execute(CommandParameter)
+            };
         }
 
         ~Button()
@@ -35,8 +96,48 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
             }
         }
 
+        protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
+        {
+            if (string.IsNullOrEmpty(Text))
+                return base.OnMeasure(widthConstraint, heightConstraint);
+
+            var bounds = _button.MeasureText(Text);
+            if (bounds.Item1 < widthConstraint)
+                return base.OnMeasure(widthConstraint, heightConstraint);
+
+            return new SizeRequest(new Size(bounds.Item1, bounds.Item2));
+        }
+
         private void HandleTouch(object sender, TouchActionEventArgs args) =>
             _button.HandleTouch(sender, args);
+
+        private static void OnTextChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            if (oldValue != newValue && null != newValue)
+            {
+                var control = (Button)bindable;
+                control._button.UpdateText((string)newValue);
+                control.InvalidateMeasure();
+            }
+        }
+
+        private static void OnButtonBackgroundChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            if (oldValue != newValue && null != newValue)
+            {
+                var control = (Button)bindable;
+                control._button.UpdateButtonBackground((Color)newValue);
+            }
+        }
+
+        private static void OnButtonForegroundChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            if (oldValue != newValue && null != newValue)
+            {
+                var control = (Button)bindable;
+                control._button.UpdateButtonForeground((Color)newValue);
+            }
+        }
 
         private class ButtonControl : SKCanvasView
         {
@@ -74,6 +175,13 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
             private SKPaint BgPaint =>
                 _isPressed ? _bgPressedPaint : _bgNormalPaint;
 
+            public Action CommandFunc { get; set; }
+
+            public ButtonControl()
+            {
+                _buttonBox = new ButtonBox();
+            }
+
             protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
             {
                 base.OnPaintSurface(e);
@@ -86,7 +194,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
 
                 if (_isInit)
                 {
-                    _buttonBox = new ButtonBox { Width = width, Height = height };
+                    _buttonBox.SetBounds(width, height);
 
                     var zonewidth = width / 3f;
                     var zoneheight = height / 3f;
@@ -149,12 +257,61 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                         break;
                     case TouchActionType.Released:
                     case TouchActionType.Cancelled:
+                        CommandFunc.Invoke();
                         _buttonBox.HandleReleased(_pressedZone, InvalidateSurface);
                         _pressedZone = new TouchZone();
                         _isPressed = false;
                         InvalidateSurface();
                         break;
                 }
+            }
+
+            public void UpdateText(string text)
+            {
+                var measures = MeasureText(text);
+                _buttonBox.SetText(text);
+                _buttonBox.SetTextBounds(measures.Item1, measures.Item2);
+                InvalidateSurface();
+            }
+
+            public void UpdateButtonBackground(Color color)
+            {
+                _bgNormalPaint = new SKPaint
+                {
+                    Style = _bgNormalPaint.Style,
+                    Color = color.ToSKColor(),
+                    StrokeWidth = _bgNormalPaint.StrokeWidth,
+                    FilterQuality = _bgNormalPaint.FilterQuality,
+                    IsAntialias = _bgNormalPaint.IsAntialias
+                };
+                _bgPressedPaint = new SKPaint
+                {
+                    Style = _bgPressedPaint.Style,
+                    Color = color.Lighten(0.5f).ToSKColor(),
+                    StrokeWidth = _bgPressedPaint.StrokeWidth,
+                    FilterQuality = _bgPressedPaint.FilterQuality,
+                    IsAntialias = _bgPressedPaint.IsAntialias
+                };
+                InvalidateSurface();
+            }
+
+            public void UpdateButtonForeground(Color color)
+            {
+                _buttonBox.SetTextColor(color.ToSKColor());
+                InvalidateSurface();
+            }
+
+            public (float, float) MeasureText(string text)
+            {
+                var bounds = new SKRect();
+                var paint = new SKPaint
+                {
+                    Color = SKColors.White,
+                    TextSize = 32f,
+                    IsAntialias = true,
+                };
+                paint.MeasureText(text, ref bounds);
+                return (bounds.Width, bounds.Height);
             }
 
             private enum TouchLocation
@@ -193,6 +350,14 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
 
             private class ButtonBox
             {
+                private string _text = string.Empty;
+                private SKPaint _textPaint = new SKPaint
+                {
+                    Color = SKColors.White,
+                    TextSize = 32f,
+                    IsAntialias = true,
+                };
+
                 private readonly double _deflectionValue = 6d;
 
                 private Dictionary<TouchLocation, Func<float, SKMatrix>> _touchByLocation;
@@ -272,9 +437,13 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                         }
                     });
 
-                public float Width { get; set; }
+                public float Width { get; private set; }
 
-                public float Height { get; set; }
+                public float TextWidth { get; private set; }
+
+                public float Height { get; private set; }
+
+                public float TextHeight { get; private set; }
 
                 public SKMatrix Matrix { get; set; } = SKMatrix.CreateIdentity();
 
@@ -284,12 +453,42 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                 public void ResetMatrix() =>
                     Matrix = SKMatrix.CreateIdentity();
 
+                public void SetText(string text)
+                {
+                    _text = text;
+                }
+
+                public void SetTextColor(SKColor color)
+                {
+                    _textPaint = new SKPaint
+                    {
+                        Color = color,
+                        TextSize = _textPaint.TextSize,
+                        IsAntialias = _textPaint.IsAntialias,
+                    };
+                }
+
+                public void SetBounds(float width, float height)
+                {
+                    Width = width;
+                    Height = height;
+                }
+
+                public void SetTextBounds(float width, float height)
+                {
+                    TextWidth = width;
+                    TextHeight = height;
+                }
+
                 public void Paint(SKCanvas canvas, float radius, SKPaint paint)
                 {
                     canvas.Save();
                     var matrix = Matrix;
                     canvas.SetMatrix(matrix);
                     canvas.DrawRoundRect(new SKRoundRect(new SKRect(0, 0, Width, Height), radius), paint);
+                    canvas.DrawText(_text, new SKPoint(
+                        Width / 2 - TextWidth / 2,
+                        Height / 2 + TextHeight / 2), _textPaint);
                     canvas.ResetMatrix();
                     canvas.Restore();
                 }
