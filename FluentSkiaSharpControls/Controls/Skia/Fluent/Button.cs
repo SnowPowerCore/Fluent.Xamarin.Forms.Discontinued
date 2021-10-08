@@ -487,8 +487,8 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                     canvas.SetMatrix(matrix);
                     canvas.DrawRoundRect(new SKRoundRect(new SKRect(0, 0, Width, Height), radius), paint);
                     canvas.DrawText(_text, new SKPoint(
-                        Width / 2 - TextWidth / 2,
-                        Height / 2 + TextHeight / 2), _textPaint);
+                        Width / 2f - TextWidth / 2f,
+                        Height / 2f + TextHeight / 2f), _textPaint);
                     canvas.ResetMatrix();
                     canvas.Restore();
                 }
