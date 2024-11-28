@@ -1,14 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <page:BasePageView xmlns="http://xamarin.com/schemas/2014/forms"
                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                   xmlns:page="clr-namespace:FluentSkiaSharpControls.Views.Pages"
                    xmlns:vms="clr-namespace:FluentSkiaSharpControls.ViewModels"
-                   xmlns:controls="clr-namespace:FluentSkiaSharpControls.Controls.Skia.Fluent" xmlns:xameffects="clr-namespace:XamEffects;assembly=XamEffects"
+                   xmlns:page="clr-namespace:FluentSkiaSharpControls.Views.Pages"
+                   xmlns:controls="clr-namespace:FluentSkiaSharpControls.Controls.Skia.Fluent"
                    x:Class="FluentSkiaSharpControls.Views.Pages.WelcomePage"
                    ViewModelType="{x:Type vms:WelcomeViewModel}"
                    BackgroundColor="Black">
     <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
-        <controls:ToggleSwitch IsOn="{Binding MagicProperty}" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
-        <Button Command="{Binding UpdateStateCommand}" Text="Toggle property"/>
+        <controls:ToggleSwitch IsOn="{Binding MagicProperty}"
+            VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="60"/>
+        <controls:Button Text="Toggle property" Command="{Binding UpdateStateCommand}"
+            HeightRequest="50" WidthRequest="135"/>
     </StackLayout>
 </page:BasePageView>

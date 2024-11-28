@@ -92,16 +92,9 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
             private bool _isPressed = false;
             private bool _isMoving = false;
 
-            private Selector _selector;
+            private SKPoint _pressedPoint = SKPoint.Empty;
 
-            private SKPaint _borderTransparentPaint = new SKPaint
-            {
-                Style = SKPaintStyle.Stroke,
-                Color = SKColors.Transparent,
-                StrokeWidth = 3,
-                FilterQuality = SKFilterQuality.High,
-                IsAntialias = true
-            };
+            private Selector _selector;
 
             private SKPaint _borderNormalPaint = new SKPaint
             {
@@ -146,7 +139,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                             ? new SKPaint
                             {
                                 Style = SKPaintStyle.StrokeAndFill,
-                                Color = ToggleBackgroundColor.ChangeColorBrightness(-0.25f).ToSKColor(),
+                                Color = ToggleBackgroundColor.Darken(0.25f).ToSKColor(),
                                 StrokeWidth = 3,
                                 FilterQuality = SKFilterQuality.High,
                                 IsAntialias = true
@@ -173,7 +166,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                             ? new SKPaint
                         {
                             Style = SKPaintStyle.StrokeAndFill,
-                            Color = ToggleBackgroundColor.ChangeColorBrightness(-0.5f).ToSKColor(),
+                            Color = ToggleBackgroundColor.Darken(0.5f).ToSKColor(),
                             StrokeWidth = 3,
                             FilterQuality = SKFilterQuality.High,
                             IsAntialias = true
@@ -209,7 +202,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                 var canvas = e.Surface.Canvas;
                 canvas.Clear();
 
-                int width = e.Info.Width;
+                var width = e.Info.Width;
                 var originalHeight = e.Info.Height;
                 var actualHeight = width / 2f;
 
@@ -247,10 +240,13 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                 {
                     case TouchActionType.Pressed:
                         _isPressed = true;
+                        _pressedPoint = point;
                         _selector.UpdateLatestPoint(point);
                         InvalidateSurface();
                         break;
                     case TouchActionType.Moved:
+                        if (point.X == _pressedPoint.X && point.Y == _pressedPoint.Y)
+                            return;
                         _isMoving = true;
                         _selector.HandleMovement(point, InvalidateSurface);
                         break;
@@ -264,6 +260,7 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                             UpdateControlState(newActive);
                             UpdateActivated(newActive);
                         }
+                        _pressedPoint = SKPoint.Empty;
                         _isPressed = false;
                         _isMoving = false;
                         InvalidateSurface();
@@ -358,15 +355,9 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                     {
                         var destination = Matrix.TransX > _width / 2 ? _limits.Item2 : _limits.Item1;
 
-                        new Animation(value =>
-                        {
-                            UpdatePosition((float)value, Matrix.TransY);
-                            invalidateSurface();
-                        }, Matrix.TransX, destination, Easing.SinOut)
-                            .Commit(Application.Current.MainPage, "ToggleSwitchSnap");
+                        StartAnimation(destination, invalidateSurface);
 
                         UpdateControlState?.Invoke(destination == _limits.Item2);
-
                         UpdateLatestPoint(new SKPoint(destination, Matrix.TransY));
                     });
                 }
@@ -379,16 +370,19 @@ namespace FluentSkiaSharpControls.Controls.Skia.Fluent
                     {
                         var destination = active ? _limits.Item2 : _limits.Item1;
 
-                        new Animation(value =>
-                        {
-                            UpdatePosition((float)value, Matrix.TransY);
-                            invalidateSurface();
-                        }, Matrix.TransX, destination, Easing.SinOut)
-                            .Commit(Application.Current.MainPage, "ToggleSwitchSnap");
+                        StartAnimation(destination, invalidateSurface);
 
                         UpdateLatestPoint(new SKPoint(destination, Matrix.TransY));
                     });
                 }
+
+                private void StartAnimation(float destPoint, Action invalidateSurface) =>
+                    new Animation(value =>
+                    {
+                        UpdatePosition((float)value, Matrix.TransY);
+                        invalidateSurface();
+                    }, Matrix.TransX, destPoint, Easing.SinOut)
+                        .Commit(Application.Current.MainPage, "ToggleSwitchSnap");
             }
         }
     }
