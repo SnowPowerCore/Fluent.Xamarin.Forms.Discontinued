@@ -22,7 +22,7 @@ namespace FluentSkiaSharpControls.Android
             Xamarin.Forms.Forms.Init(this, savedInstanceState);
             AGlide.Forms.Init(this);
             XamEffects.Droid.Effects.Init();
-            Rg.Plugins.Popup.Popup.Init(this, savedInstanceState);
+            Rg.Plugins.Popup.Popup.Init(this);
 
             LoadApplication(Startup.Init(ConfigureServices));
         }
